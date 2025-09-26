@@ -203,3 +203,4 @@ class ScannerFragment: Fragment() {
     }
   }
 }
+
