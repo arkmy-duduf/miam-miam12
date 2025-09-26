@@ -1,22 +1,23 @@
-package com.tony.mealstock.data
+﻿package com.tony.mealstock.data
 
 import android.content.Context
-import androidx.room.*
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 
-@Database(entities=[Product::class,Recipe::class,RecipeIngredient::class,MealPlan::class,ShoppingItem::class,ScanLog::class], version=1)
-abstract class AppDb: RoomDatabase(){
-  abstract fun productDao(): ProductDao
-  abstract fun recipeDao(): RecipeDao
-  abstract fun ingredientDao(): IngredientDao
-  abstract fun planDao(): PlanDao
-  abstract fun shoppingDao(): ShoppingDao
-  abstract fun scanLogDao(): ScanLogDao
+@Database(entities = [Product::class, ScanLog::class], version = 2, exportSchema = false)
+abstract class AppDb : RoomDatabase() {
+    abstract fun productDao(): ProductDao
+    abstract fun scanLogDao(): ScanLogDao
 
-  companion object {
-    @Volatile private var I: AppDb? = null
-    fun get(ctx: Context): AppDb =
-      I ?: synchronized(this) {
-        I ?: Room.databaseBuilder(ctx.applicationContext, AppDb::class.java, "mealstock.db").build().also { I = it }
-      }
-  }
+    companion object {
+        @Volatile private var INSTANCE: AppDb? = null
+        fun get(ctx: Context): AppDb {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(ctx.applicationContext, AppDb::class.java, "app.db")
+                    .fallbackToDestructiveMigration()  // recrée la DB si schéma change (simple pour tests)
+                    .build().also { INSTANCE = it }
+            }
+        }
+    }
 }
