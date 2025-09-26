@@ -19,7 +19,7 @@ class MainActivity: AppCompatActivity() {
         R.id.nav_myrecipes -> switch(MyRecipesFragment())
         R.id.nav_planning -> switch(PlanningFragment())
         R.id.nav_shopping -> switch(ShoppingFragment())
-        R.id.nav_settings -> switch(SettingsFragment())
+
       }; true
     }
     nav.selectedItemId = R.id.nav_scanner
