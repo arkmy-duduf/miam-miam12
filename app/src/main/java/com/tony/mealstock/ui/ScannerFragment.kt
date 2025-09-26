@@ -3,6 +3,9 @@
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +14,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
@@ -49,10 +53,14 @@ class ScannerFragment: Fragment() {
   private lateinit var txtName: TextView
   private lateinit var img: ImageView
   private lateinit var txtQty: TextView
+  private lateinit var btnTorch: Button
 
   private var lastCode: String? = null
   private var lastName: String = "Produit inconnu"
   private var lock = false
+
+  private var camera: Camera? = null
+  private var torchOn = false
 
   private val req = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
     if (granted) startCamera()
@@ -86,6 +94,13 @@ class ScannerFragment: Fragment() {
     txtName = v.findViewById(R.id.txtName)
     img = v.findViewById(R.id.img)
     txtQty = v.findViewById(R.id.txtQty)
+    btnTorch = v.findViewById(R.id.btnTorch)
+
+    btnTorch.setOnClickListener {
+      torchOn = !torchOn
+      camera?.cameraControl?.enableTorch(torchOn)
+      btnTorch.text = if (torchOn) "Torche ON" else "Torche"
+    }
 
     v.findViewById<Button>(R.id.btnAdd).setOnClickListener { lastCode?.let { updateQty(it, +1.0) } }
     v.findViewById<Button>(R.id.btnRemove).setOnClickListener { lastCode?.let { updateQty(it, -1.0) } }
@@ -110,10 +125,13 @@ class ScannerFragment: Fragment() {
           .also { it.setAnalyzer(Executors.newSingleThreadExecutor(), ::analyze) }
 
         provider.unbindAll()
-        provider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, prev, analysis)
+        camera = provider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, prev, analysis)
+
+        // Remettre le label du bouton si torche déjà active
+        btnTorch.text = if (torchOn) "Torche ON" else "Torche"
       }, ContextCompat.getMainExecutor(requireContext()))
     } catch (e: Exception) {
-      Toast.makeText(requireContext(), "Caméra indisponible: ", Toast.LENGTH_LONG).show()
+      Toast.makeText(requireContext(), "Caméra indisponible: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
     }
   }
 
@@ -134,6 +152,19 @@ class ScannerFragment: Fragment() {
   private fun onBarcode(code: String) {
     if (lock) return
     lock = true
+
+    // Vibration courte pour feedback
+    try {
+      val vibrator = if (android.os.Build.VERSION.SDK_INT >= 31) {
+        val vm = requireContext().getSystemService(VibratorManager::class.java)
+        vm?.defaultVibrator
+      } else {
+        @Suppress("DEPRECATION")
+        requireContext().getSystemService(Vibrator::class.java)
+      }
+      vibrator?.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
+    } catch (_: Exception) { }
+
     txtCode.text = code
     lastCode = code
 
@@ -154,7 +185,7 @@ class ScannerFragment: Fragment() {
         val f = pdao.find(code)
         if (f == null) { pdao.upsert(Product(code, name)); 0.0 } else f.qty
       }
-      txtQty.text = "Qté: "
+      txtQty.text = "Qté: ${qty.toInt()}"
 
       // anti-spam du même code
       preview.postDelayed({ lock = false }, 1100)
@@ -168,7 +199,7 @@ class ScannerFragment: Fragment() {
       pdao.upsert(p.copy(name = lastName, qty = newQ))
       ldao.insert(ScanLog(barcode = code, deltaQty = delta))
       val q = pdao.find(code)?.qty ?: 0.0
-      withContext(Dispatchers.Main) { txtQty.text = "Qté: " }
+      withContext(Dispatchers.Main) { txtQty.text = "Qté: ${q.toInt()}" }
     }
   }
 }
