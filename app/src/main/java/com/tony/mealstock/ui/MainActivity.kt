@@ -1,5 +1,7 @@
 package com.tony.mealstock.ui
+import android.view.Menu
 
+import android.view.MenuItem
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -25,3 +27,4 @@ class MainActivity: AppCompatActivity() {
     nav.selectedItemId = R.id.nav_scanner
   }
 }
+
