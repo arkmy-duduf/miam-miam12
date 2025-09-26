@@ -1,4 +1,4 @@
-﻿package com.tony.mealstock.ui
+package com.tony.mealstock.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -66,7 +66,6 @@ class ScannerFragment: Fragment() {
     if (granted) startCamera()
   }
 
-  // Scanner nullable + try/catch (si ML Kit indispo, on évite le crash)
   private val scanner: BarcodeScanner? by lazy {
     try {
       val opts = BarcodeScannerOptions.Builder()
@@ -78,9 +77,7 @@ class ScannerFragment: Fragment() {
           Barcode.FORMAT_CODE_128
         ).build()
       BarcodeScanning.getClient(opts)
-    } catch (e: Exception) {
-      null
-    }
+    } catch (_: Exception) { null }
   }
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -126,19 +123,15 @@ class ScannerFragment: Fragment() {
 
         provider.unbindAll()
         camera = provider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, prev, analysis)
-
-        // Remettre le label du bouton si torche déjà active
-        btnTorch.text = if (torchOn) "Torche ON" else "Torche"
       }, ContextCompat.getMainExecutor(requireContext()))
     } catch (e: Exception) {
-      Toast.makeText(requireContext(), "Caméra indisponible: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+      Toast.makeText(requireContext(), "Cam�ra indisponible: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
     }
   }
 
   private fun analyze(proxy: ImageProxy) {
     if (lock) { proxy.close(); return }
-    val sc = scanner
-    if (sc == null) { proxy.close(); return }
+    val sc = scanner ?: run { proxy.close(); return }
     val media = proxy.image ?: run { proxy.close(); return }
     val input = InputImage.fromMediaImage(media, proxy.imageInfo.rotationDegrees)
     sc.process(input)
@@ -153,7 +146,7 @@ class ScannerFragment: Fragment() {
     if (lock) return
     lock = true
 
-    // Vibration courte pour feedback
+    // Vibration courte
     try {
       val vibrator = if (android.os.Build.VERSION.SDK_INT >= 31) {
         val vm = requireContext().getSystemService(VibratorManager::class.java)
@@ -163,7 +156,7 @@ class ScannerFragment: Fragment() {
         requireContext().getSystemService(Vibrator::class.java)
       }
       vibrator?.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
-    } catch (_: Exception) { }
+    } catch (_: Exception) {}
 
     txtCode.text = code
     lastCode = code
@@ -185,9 +178,8 @@ class ScannerFragment: Fragment() {
         val f = pdao.find(code)
         if (f == null) { pdao.upsert(Product(code, name)); 0.0 } else f.qty
       }
-      txtQty.text = "Qté: ${qty.toInt()}"
+      txtQty.text = "Qt�: ${qty.toInt()}"
 
-      // anti-spam du même code
       preview.postDelayed({ lock = false }, 1100)
     }
   }
@@ -199,8 +191,7 @@ class ScannerFragment: Fragment() {
       pdao.upsert(p.copy(name = lastName, qty = newQ))
       ldao.insert(ScanLog(barcode = code, deltaQty = delta))
       val q = pdao.find(code)?.qty ?: 0.0
-      withContext(Dispatchers.Main) { txtQty.text = "Qté: ${q.toInt()}" }
+      withContext(Dispatchers.Main) { txtQty.text = "Qt�: ${q.toInt()}" }
     }
   }
 }
-
