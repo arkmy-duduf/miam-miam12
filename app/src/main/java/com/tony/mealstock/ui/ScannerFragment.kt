@@ -25,6 +25,7 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.tony.mealstock.R
+import android.widget.Toast
 import com.tony.mealstock.data.AppDb
 import com.tony.mealstock.data.Product
 import com.tony.mealstock.data.ProductDao
@@ -56,6 +57,7 @@ class ScannerFragment: Fragment() {
   }
 
   private val scanner by lazy {
+  try {
     val opts = BarcodeScannerOptions.Builder()
       .setBarcodeFormats(
         Barcode.FORMAT_EAN_13,
@@ -65,7 +67,10 @@ class ScannerFragment: Fragment() {
         Barcode.FORMAT_CODE_128
       ).build()
     BarcodeScanning.getClient(opts)
+  } catch (e: Exception) {
+    null
   }
+}
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
     val v = inflater.inflate(R.layout.fragment_scanner, container, false)
@@ -91,6 +96,7 @@ class ScannerFragment: Fragment() {
   }
 
   private fun startCamera() {
+  try {
     val f = ProcessCameraProvider.getInstance(requireContext())
     f.addListener({
       val provider = f.get()
@@ -109,7 +115,7 @@ class ScannerFragment: Fragment() {
     if (lock) { proxy.close(); return }
     val media = proxy.image ?: run { proxy.close(); return }
     val input = InputImage.fromMediaImage(media, proxy.imageInfo.rotationDegrees)
-    scanner.process(input)
+    scanner?.process(input) ?: run { proxy.close(); return }
       .addOnSuccessListener { list ->
         val code = list.firstOrNull()?.rawValue
         if (!code.isNullOrBlank()) onBarcode(code)
@@ -158,3 +164,4 @@ class ScannerFragment: Fragment() {
     }
   }
 }
+
