@@ -1,8 +1,15 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto">
-  <item
-      android:id="@+id/action_settings"
-      android:title="Réglages"
-      android:icon="@android:drawable/ic_menu_preferences"
-      app:showAsAction="always" />
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:title="Accueil" />
+    <item
+        android:id="@+id/nav_stock"
+        android:title="Stock" />
+    <item
+        android:id="@+id/nav_scanner"
+        android:title="Scanner" />
+    <item
+        android:id="@+id/nav_recipes"
+        android:title="Recettes" />
 </menu>
