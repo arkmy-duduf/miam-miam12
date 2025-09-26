@@ -1,4 +1,4 @@
-plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("kotlin-kapt") }
+plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.kapt") }
 
 android {
   namespace = "com.tony.mealstock"
