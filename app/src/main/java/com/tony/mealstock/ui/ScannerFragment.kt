@@ -1,4 +1,4 @@
-package com.tony.mealstock.ui
+﻿package com.tony.mealstock.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -13,9 +13,12 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
-import com.google.mlkit.vision.barcode.*
+
 import com.google.mlkit.vision.common.InputImage
-import com.tony.mealstock.R
+
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcodeimport com.tony.mealstock.R
 import com.tony.mealstock.data.*
 import com.tony.mealstock.net.OFF
 import kotlinx.coroutines.*
@@ -75,7 +78,7 @@ class ScannerFragment: Fragment() {
         val f = pdao.find(code)
         if (f == null) { pdao.upsert(Product(code, name)); 0.0 } else f.qty
       }
-      txtQty.text = "Qté: ${qty.toInt()}"
+      txtQty.text = "QtÃ©: ${qty.toInt()}"
       preview.postDelayed({ lock = false }, 1100)
     }
   }
@@ -87,7 +90,8 @@ class ScannerFragment: Fragment() {
       pdao.upsert(p.copy(name = lastName, qty = newQ))
       ldao.insert(ScanLog(barcode = code, deltaQty = delta))
       val q = pdao.find(code)?.qty ?: 0.0
-      withContext(Dispatchers.Main) { txtQty.text = "Qté: ${q.toInt()}" }
+      withContext(Dispatchers.Main) { txtQty.text = "QtÃ©: ${q.toInt()}" }
     }
   }
 }
+
