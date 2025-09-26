@@ -15,7 +15,7 @@ abstract class AppDb : RoomDatabase() {
         fun get(ctx: Context): AppDb {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(ctx.applicationContext, AppDb::class.java, "app.db")
-                    .fallbackToDestructiveMigration()  // recrée la DB si schéma change (simple pour tests)
+                    .fallbackToDestructiveMigration()
                     .build().also { INSTANCE = it }
             }
         }

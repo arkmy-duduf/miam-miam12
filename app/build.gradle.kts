@@ -1,4 +1,4 @@
-plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.kapt") }
+﻿plugins { id("com.android.application"); id("org.jetbrains.kotlin.android"); id("org.jetbrains.kotlin.kapt") }
 
 android {
   namespace = "com.tony.mealstock"
@@ -38,3 +38,4 @@ dependencies {
   implementation("com.github.bumptech.glide:glide:4.16.0")
   kapt("com.github.bumptech.glide:compiler:4.16.0")
 }
+
