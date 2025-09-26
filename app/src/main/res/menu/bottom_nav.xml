@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:id="@+id/nav_scanner" android:title="Scanner" android:icon="@android:drawable/ic_menu_camera"/>
+  <item android:id="@+id/nav_stock" android:title="Stock" android:icon="@android:drawable/ic_menu_agenda"/>
+  <item android:id="@+id/nav_myrecipes" android:title="Recettes perso" android:icon="@android:drawable/ic_menu_edit"/>
+  <item android:id="@+id/nav_planning" android:title="Planning" android:icon="@android:drawable/ic_menu_my_calendar"/>
+  <item android:id="@+id/nav_shopping" android:title="Courses" android:icon="@android:drawable/ic_menu_sort_by_size"/>
+  <item android:id="@+id/nav_settings" android:title="Réglages" android:icon="@android:drawable/ic_menu_preferences"/>
+</menu>

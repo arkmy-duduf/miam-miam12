@@ -1,0 +1,4 @@
+-keep class com.google.mlkit.** { *; }
+-keep class com.google.android.gms.** { *; }
+-keep class com.tony.mealstock.** { *; }
+-dontwarn com.google.mlkit.**
