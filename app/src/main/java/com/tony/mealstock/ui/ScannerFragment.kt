@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -20,12 +21,12 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
+import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.tony.mealstock.R
-import android.widget.Toast
 import com.tony.mealstock.data.AppDb
 import com.tony.mealstock.data.Product
 import com.tony.mealstock.data.ProductDao
@@ -38,6 +39,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
 class ScannerFragment: Fragment() {
+
   private lateinit var db: AppDb
   private lateinit var pdao: ProductDao
   private lateinit var ldao: ScanLogDao
@@ -56,21 +58,22 @@ class ScannerFragment: Fragment() {
     if (granted) startCamera()
   }
 
-  private val scanner by lazy {
-  try {
-    val opts = BarcodeScannerOptions.Builder()
-      .setBarcodeFormats(
-        Barcode.FORMAT_EAN_13,
-        Barcode.FORMAT_EAN_8,
-        Barcode.FORMAT_UPC_A,
-        Barcode.FORMAT_UPC_E,
-        Barcode.FORMAT_CODE_128
-      ).build()
-    BarcodeScanning.getClient(opts)
-  } catch (e: Exception) {
-    null
+  // Scanner nullable + try/catch (si ML Kit indispo, on évite le crash)
+  private val scanner: BarcodeScanner? by lazy {
+    try {
+      val opts = BarcodeScannerOptions.Builder()
+        .setBarcodeFormats(
+          Barcode.FORMAT_EAN_13,
+          Barcode.FORMAT_EAN_8,
+          Barcode.FORMAT_UPC_A,
+          Barcode.FORMAT_UPC_E,
+          Barcode.FORMAT_CODE_128
+        ).build()
+      BarcodeScanning.getClient(opts)
+    } catch (e: Exception) {
+      null
+    }
   }
-}
 
   override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
     val v = inflater.inflate(R.layout.fragment_scanner, container, false)
@@ -96,26 +99,31 @@ class ScannerFragment: Fragment() {
   }
 
   private fun startCamera() {
-  try {
-    val f = ProcessCameraProvider.getInstance(requireContext())
-    f.addListener({
-      val provider = f.get()
-      val prev = Preview.Builder().build().apply { setSurfaceProvider(preview.surfaceProvider) }
-      val analysis = ImageAnalysis.Builder()
-        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-        .build()
-        .also { it.setAnalyzer(Executors.newSingleThreadExecutor(), ::analyze) }
+    try {
+      val f = ProcessCameraProvider.getInstance(requireContext())
+      f.addListener({
+        val provider = f.get()
+        val prev = Preview.Builder().build().apply { setSurfaceProvider(preview.surfaceProvider) }
+        val analysis = ImageAnalysis.Builder()
+          .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+          .build()
+          .also { it.setAnalyzer(Executors.newSingleThreadExecutor(), ::analyze) }
 
-      provider.unbindAll()
-      provider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, prev, analysis)
-    }, ContextCompat.getMainExecutor(requireContext()))
+        provider.unbindAll()
+        provider.bindToLifecycle(viewLifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, prev, analysis)
+      }, ContextCompat.getMainExecutor(requireContext()))
+    } catch (e: Exception) {
+      Toast.makeText(requireContext(), "Caméra indisponible: ", Toast.LENGTH_LONG).show()
+    }
   }
 
   private fun analyze(proxy: ImageProxy) {
     if (lock) { proxy.close(); return }
+    val sc = scanner
+    if (sc == null) { proxy.close(); return }
     val media = proxy.image ?: run { proxy.close(); return }
     val input = InputImage.fromMediaImage(media, proxy.imageInfo.rotationDegrees)
-    scanner?.process(input) ?: run { proxy.close(); return }
+    sc.process(input)
       .addOnSuccessListener { list ->
         val code = list.firstOrNull()?.rawValue
         if (!code.isNullOrBlank()) onBarcode(code)
@@ -164,4 +172,3 @@ class ScannerFragment: Fragment() {
     }
   }
 }
-
