@@ -1,4 +1,6 @@
 package com.tony.mealstock.ui
+import android.content.Intent
+import com.tony.mealstock.ui.RecipesActivity
 import android.view.Menu
 
 import android.view.MenuItem
@@ -26,5 +28,20 @@ class MainActivity: AppCompatActivity() {
     }
     nav.selectedItemId = R.id.nav_scanner
   }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_actions, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_recipes -> {
+                startActivity(Intent(this, RecipesActivity::class.java))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
 }
 
